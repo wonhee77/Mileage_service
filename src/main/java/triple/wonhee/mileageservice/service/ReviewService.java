@@ -43,6 +43,10 @@ public class ReviewService {
             () -> new NullPointerException("해당 id의 장소가 없습니다.")
         );
 
+        Review review = reviewRepository.findByUserAndPlace(findUser, findPlace).orElseThrow(
+            () -> new NullPointerException("User가 해당 장소에 작성한 리뷰가 없습니다.")
+        );
+
         if (action == ActionType.ADD) {
             //리뷰 작성
             boolean isFirstReview =
@@ -54,6 +58,9 @@ public class ReviewService {
             //리뷰 수정
         } else if (action == ActionType.DELETE) {
             //리뷰 삭제
+            findUser.plusPoint(-review.getReviewPoint());
+            saveReviewPointHistory(eventRequestDto, review.isFirstReview(),
+                -review.getReviewPoint(), 0);
         } else {
             throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
         }
