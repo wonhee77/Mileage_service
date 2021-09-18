@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import triple.wonhee.mileageservice.domain.ActionType;
 import triple.wonhee.mileageservice.domain.Place;
+import triple.wonhee.mileageservice.domain.Review;
+import triple.wonhee.mileageservice.domain.ReviewPointHistory;
 import triple.wonhee.mileageservice.domain.User;
 import triple.wonhee.mileageservice.dto.EventRequestDto;
 import triple.wonhee.mileageservice.repository.PlaceRepository;
@@ -47,7 +49,7 @@ public class ReviewService {
                 (reviewRepository.findAllByPlace(findPlace).size() == 1) ? true : false;
             int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
             findUser.plusPoint(reviewPoint);
-
+            saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
         } else if (action == ActionType.MOD) {
             //리뷰 수정
         } else if (action == ActionType.DELETE) {
@@ -58,6 +60,29 @@ public class ReviewService {
 
     }
 
+    private void saveReviewPointHistory(EventRequestDto eventRequestDto, boolean isFirstReview,
+        int changedPoint, int reviewPoint) {
+        ActionType action = eventRequestDto.getAction();
+        String content = eventRequestDto.getContent();
+        String reviewId = eventRequestDto.getReviewId();
+        int attachedPhotoIdsSize = eventRequestDto.getAttachedPhotoIds().size();
+        String placeId = eventRequestDto.getPlaceId();
+        String userId = eventRequestDto.getUserId();
+
+        ReviewPointHistory reviewPointHistory = ReviewPointHistory.builder()
+            .action(action)
+            .reviewId(reviewId)
+            .attachedPhotoCount(attachedPhotoIdsSize)
+            .userId(userId)
+            .placeId(placeId)
+            .content(content)
+            .isFirstReview(isFirstReview)
+            .changedPoint(changedPoint)
+            .reviewPoint(reviewPoint)
+            .build();
+
+        reviewPointRepository.save(reviewPointHistory);
+    }
 
     private int calculatePointWith(String content, int attachedPhotoCount,
         boolean isFirstReview) {
