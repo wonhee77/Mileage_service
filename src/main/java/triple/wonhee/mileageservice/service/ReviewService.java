@@ -1,5 +1,6 @@
 package triple.wonhee.mileageservice.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,59 @@ public class ReviewService {
             findUser.plusPoint(-review.getReviewPoint());
             saveReviewPointHistory(eventRequestDto, review.isFirstReview(),
                 -review.getReviewPoint(), 0);
+        } else {
+            throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
+        }
+
+    }
+
+    @Transactional
+    public void reviewIndependentSaveReviewPoint(EventRequestDto eventRequestDto) {
+        ActionType action = eventRequestDto.getAction();
+        String content = eventRequestDto.getContent();
+        int attachedPhotoIdsSize = eventRequestDto.getAttachedPhotoIds().size();
+        String placeId = eventRequestDto.getPlaceId();
+        String userId = eventRequestDto.getUserId();
+        String reviewId = eventRequestDto.getReviewId();
+
+        User findUser = userRepository.findByUserId(userId).orElseThrow(
+            () -> new NullPointerException("해당 id의 유저가 없습니다.")
+        );
+
+        boolean isFirstReview = false;
+        List<ReviewPointHistory> findReviewPointHistoryList = reviewPointRepository
+            .findAllByPlaceIdAndIsFirstReviewOrderByIdDesc(placeId, true);
+        if (findReviewPointHistoryList.size() == 0) {
+            isFirstReview = true;
+        } else if (findReviewPointHistoryList.get(0).getAction() == ActionType.DELETE) {
+            isFirstReview = true;
+        }
+
+        if (action == ActionType.ADD) {
+            //리뷰 작성
+            int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
+            findUser.plusPoint(reviewPoint);
+            saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
+
+        } else if (action == ActionType.MOD) {
+            //리뷰 수정
+            List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
+                .findAllByReviewIdOrderByIdDesc(reviewId);
+            ReviewPointHistory latestReviewPointHistory = findReviewPointHistories.get(0);
+            int oldPoint = latestReviewPointHistory.getReviewPoint();
+            int newPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
+            int changedPoint = newPoint - oldPoint;
+            findUser.plusPoint(changedPoint);
+            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(), changedPoint, newPoint);
+
+        } else if (action == ActionType.DELETE) {
+            //리뷰 삭제
+            List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
+                .findAllByReviewIdOrderByIdDesc(reviewId);
+            ReviewPointHistory latestReviewPointHistory = findReviewPointHistories.get(0);
+            int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
+            findUser.plusPoint(-reviewPoint);
+            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(), -reviewPoint, 0);
         } else {
             throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
         }
