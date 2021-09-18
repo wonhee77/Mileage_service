@@ -1,16 +1,18 @@
 package triple.wonhee.mileageservice.service;
 
+import static triple.wonhee.mileageservice.constant.ReviewPointConstant.CONTENT_POINT;
+import static triple.wonhee.mileageservice.constant.ReviewPointConstant.FIRST_REVIEW_POINT;
+import static triple.wonhee.mileageservice.constant.ReviewPointConstant.PHOTO_POINT;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import triple.wonhee.mileageservice.domain.ActionType;
-import triple.wonhee.mileageservice.domain.Place;
 import triple.wonhee.mileageservice.domain.Review;
 import triple.wonhee.mileageservice.domain.ReviewPointHistory;
 import triple.wonhee.mileageservice.domain.User;
 import triple.wonhee.mileageservice.dto.EventRequestDto;
-import triple.wonhee.mileageservice.repository.PlaceRepository;
 import triple.wonhee.mileageservice.repository.ReviewPointRepository;
 import triple.wonhee.mileageservice.repository.ReviewRepository;
 import triple.wonhee.mileageservice.repository.UserRepository;
@@ -21,37 +23,27 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
-    private final PlaceRepository placeRepository;
     private final ReviewPointRepository reviewPointRepository;
-
-    final int CONTENT_POINT = 1;
-    final int PHOTO_POINT = 1;
-    final int FIRST_REVIEW_POINT = 1;
 
     @Transactional
     public void saveReviewPoint(EventRequestDto eventRequestDto) {
         ActionType action = eventRequestDto.getAction();
         String content = eventRequestDto.getContent();
         int attachedPhotoIdsSize = eventRequestDto.getAttachedPhotoIds().size();
-        String placeId = eventRequestDto.getPlaceId();
         String userId = eventRequestDto.getUserId();
+        String reviewId = eventRequestDto.getReviewId();
 
         User findUser = userRepository.findByUserId(userId).orElseThrow(
             () -> new NullPointerException("해당 id의 유저가 없습니다.")
         );
 
-        Place findPlace = placeRepository.findByPlaceId(placeId).orElseThrow(
-            () -> new NullPointerException("해당 id의 장소가 없습니다.")
-        );
-
-        Review review = reviewRepository.findByUserAndPlace(findUser, findPlace).orElseThrow(
+        Review review = reviewRepository.findById(reviewId).orElseThrow(
             () -> new NullPointerException("User가 해당 장소에 작성한 리뷰가 없습니다.")
         );
 
         if (action == ActionType.ADD) {
             //리뷰 작성
-            boolean isFirstReview =
-                (reviewRepository.findAllByPlace(findPlace).size() == 1) ? true : false;
+            boolean isFirstReview = review.isFirstReview();
             int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
             findUser.plusPoint(reviewPoint);
             saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
@@ -95,6 +87,7 @@ public class ReviewService {
             isFirstReview = true;
         } else if (findReviewPointHistoryList.get(0).getAction() == ActionType.DELETE) {
             isFirstReview = true;
+            // TODO 리뷰가 남아있는경우
         }
 
         if (action == ActionType.ADD) {
@@ -112,16 +105,17 @@ public class ReviewService {
             int newPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
             int changedPoint = newPoint - oldPoint;
             findUser.plusPoint(changedPoint);
-            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(), changedPoint, newPoint);
+            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(),
+                changedPoint, newPoint);
 
         } else if (action == ActionType.DELETE) {
             //리뷰 삭제
             List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
                 .findAllByReviewIdOrderByIdDesc(reviewId);
             ReviewPointHistory latestReviewPointHistory = findReviewPointHistories.get(0);
-            int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
-            findUser.plusPoint(-reviewPoint);
-            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(), -reviewPoint, 0);
+            findUser.plusPoint(-latestReviewPointHistory.getReviewPoint());
+            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(),
+                -latestReviewPointHistory.getReviewPoint(), 0);
         } else {
             throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
         }
@@ -152,8 +146,7 @@ public class ReviewService {
         reviewPointRepository.save(reviewPointHistory);
     }
 
-    private int calculatePointWith(String content, int attachedPhotoCount,
-        boolean isFirstReview) {
+    private int calculatePointWith(String content, int attachedPhotoCount, boolean isFirstReview) {
         int totalPoint = 0;
 
         if (content.length() >= 1) {
