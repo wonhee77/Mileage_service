@@ -6,13 +6,8 @@ import lombok.Getter;
 
 @Getter
 public class ReviewRequestDto {
-
-    Enum type;
-    Enum action;
-    String reviewId;
     String content;
     List attachedPhotoIds = new ArrayList();
     String userId;
     String placeId;
-
 }
