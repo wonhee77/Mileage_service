@@ -56,6 +56,13 @@ public class ReviewService {
             saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
         } else if (action == ActionType.MOD) {
             //리뷰 수정
+            int reviewPoint = review.getReviewPoint();
+            int modifiedPoint = calculatePointWith(content, attachedPhotoIdsSize,
+                review.isFirstReview());
+            int changedPoint = modifiedPoint - reviewPoint;
+            findUser.plusPoint(changedPoint);
+            saveReviewPointHistory(eventRequestDto, review.isFirstReview(), changedPoint,
+                modifiedPoint);
         } else if (action == ActionType.DELETE) {
             //리뷰 삭제
             findUser.plusPoint(-review.getReviewPoint());
