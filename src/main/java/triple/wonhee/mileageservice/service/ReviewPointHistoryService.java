@@ -19,56 +19,14 @@ import triple.wonhee.mileageservice.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-public class ReviewService {
+public class ReviewPointHistoryService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ReviewPointRepository reviewPointRepository;
 
     @Transactional
-    public void saveReviewPoint(EventRequestDto eventRequestDto) {
-        ActionType action = eventRequestDto.getAction();
-        String content = eventRequestDto.getContent();
-        int attachedPhotoIdsSize = eventRequestDto.getAttachedPhotoIds().size();
-        String userId = eventRequestDto.getUserId();
-        String reviewId = eventRequestDto.getReviewId();
-
-        User findUser = userRepository.findByUserId(userId).orElseThrow(
-            () -> new NullPointerException("해당 id의 유저가 없습니다.")
-        );
-
-        Review review = reviewRepository.findById(reviewId).orElseThrow(
-            () -> new NullPointerException("User가 해당 장소에 작성한 리뷰가 없습니다.")
-        );
-
-        if (action == ActionType.ADD) {
-            //리뷰 작성
-            boolean isFirstReview = review.isFirstReview();
-            int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
-            findUser.plusPoint(reviewPoint);
-            saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
-        } else if (action == ActionType.MOD) {
-            //리뷰 수정
-            int reviewPoint = review.getReviewPoint();
-            int modifiedPoint = calculatePointWith(content, attachedPhotoIdsSize,
-                review.isFirstReview());
-            int changedPoint = modifiedPoint - reviewPoint;
-            findUser.plusPoint(changedPoint);
-            saveReviewPointHistory(eventRequestDto, review.isFirstReview(), changedPoint,
-                modifiedPoint);
-        } else if (action == ActionType.DELETE) {
-            //리뷰 삭제
-            findUser.plusPoint(-review.getReviewPoint());
-            saveReviewPointHistory(eventRequestDto, review.isFirstReview(),
-                -review.getReviewPoint(), 0);
-        } else {
-            throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
-        }
-
-    }
-
-    @Transactional
-    public void reviewIndependentSaveReviewPoint(EventRequestDto eventRequestDto) {
+    public ReviewPointHistory saveReviewPointHistory(EventRequestDto eventRequestDto) {
         ActionType action = eventRequestDto.getAction();
         String content = eventRequestDto.getContent();
         int attachedPhotoIdsSize = eventRequestDto.getAttachedPhotoIds().size();
@@ -80,49 +38,42 @@ public class ReviewService {
             () -> new NullPointerException("해당 id의 유저가 없습니다.")
         );
 
-        boolean isFirstReview = false;
-        List<ReviewPointHistory> findReviewPointHistoryList = reviewPointRepository
-            .findAllByPlaceIdAndIsFirstReviewOrderByIdDesc(placeId, true);
-        if (findReviewPointHistoryList.size() == 0) {
-            isFirstReview = true;
-        } else if (findReviewPointHistoryList.get(0).getAction() == ActionType.DELETE) {
-            isFirstReview = true;
-            // TODO 리뷰가 남아있는경우
-        }
-
-        if (action == ActionType.ADD) {
-            //리뷰 작성
+        if (action == ActionType.ADD) { //리뷰 작성
+            List<Review> findReviewList = reviewRepository.findAllByPlaceId(placeId);
+            //Review가 DB에 이미 저장되었다는 가정하에 해당 장소에 대한 findReviewList.size()가 1인 경우를 첫 리뷰로 판단
+            boolean isFirstReview = findReviewList.size() == 1;
             int reviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
             findUser.plusPoint(reviewPoint);
-            saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
+            return saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
 
-        } else if (action == ActionType.MOD) {
-            //리뷰 수정
+        } else if (action == ActionType.MOD) { //리뷰 수정
+            //ReviewPointHistory 목록에서 Id를 역순으로 가져옴으로써 reviewId에 대한 가장 최근 이력 조회
             List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
                 .findAllByReviewIdOrderByIdDesc(reviewId);
             ReviewPointHistory latestReviewPointHistory = findReviewPointHistories.get(0);
-            int oldPoint = latestReviewPointHistory.getReviewPoint();
-            int newPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
-            int changedPoint = newPoint - oldPoint;
+
+            boolean isFirstReview = latestReviewPointHistory.isFirstReview();
+            int oldReviewPoint = latestReviewPointHistory.getReviewPoint();
+            int newReviewPoint = calculatePointWith(content, attachedPhotoIdsSize, isFirstReview);
+            int changedPoint = newReviewPoint - oldReviewPoint;
             findUser.plusPoint(changedPoint);
-            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(),
-                changedPoint, newPoint);
+            return saveReviewPointHistory(eventRequestDto, isFirstReview, changedPoint, newReviewPoint);
 
-        } else if (action == ActionType.DELETE) {
-            //리뷰 삭제
+        } else if (action == ActionType.DELETE) { // 리뷰 삭제
+            //ReviewPointHistory 목록에서 Id를 역순으로 가져옴으로써 reviewId에 대한 가장 최근 이력 조회
             List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
                 .findAllByReviewIdOrderByIdDesc(reviewId);
             ReviewPointHistory latestReviewPointHistory = findReviewPointHistories.get(0);
+
             findUser.plusPoint(-latestReviewPointHistory.getReviewPoint());
-            saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(),
+            return saveReviewPointHistory(eventRequestDto, latestReviewPointHistory.isFirstReview(),
                 -latestReviewPointHistory.getReviewPoint(), 0);
         } else {
             throw new IllegalArgumentException("액션 정보를 찾을 수 없습니다.");
         }
-
     }
 
-    private void saveReviewPointHistory(EventRequestDto eventRequestDto, boolean isFirstReview,
+    private ReviewPointHistory saveReviewPointHistory(EventRequestDto eventRequestDto, boolean isFirstReview,
         int changedPoint, int reviewPoint) {
         ActionType action = eventRequestDto.getAction();
         String content = eventRequestDto.getContent();
@@ -144,6 +95,8 @@ public class ReviewService {
             .build();
 
         reviewPointRepository.save(reviewPointHistory);
+
+        return reviewPointHistory;
     }
 
     private int calculatePointWith(String content, int attachedPhotoCount, boolean isFirstReview) {
