@@ -28,7 +28,7 @@ Spring Data JPA, Lombok에 의존성을 가지고 있습니다.
    - 아래의 API로 JSON 형식을 통해 Review Event를 전달하여 Point 적립을 할 수 있습니다.   
    - 현재 예시에 해당하는 reviewId, userId, placeId만 RDS에 저장이 되어 있기 때문에 추가로 User, Review, Place에 
      대한 값을 입력하지 않은 상황에서는 하기 id로만 API 요청이 가능합니다.   
-     <img width="608" alt="스크린샷 2021-09-19 오후 7 19 09" src="https://user-images.githubusercontent.com/85449777/133925835-31d6ebf7-b2ca-4585-b078-daeff43aaa01.png">
+<img width="608" alt="스크린샷 2021-09-19 오후 7 19 09" src="https://user-images.githubusercontent.com/85449777/133925835-31d6ebf7-b2ca-4585-b078-daeff43aaa01.png">
 
 >Post , http://13.124.236.225/events,    
 {  
@@ -40,6 +40,7 @@ Spring Data JPA, Lombok에 의존성을 가지고 있습니다.
     "userId" : "2346kb55-b1g4-gdfg-134g-21fnm4d4m12f",   
     "placeId" : "jj424b55-b1g4-gdfg-134g-21fnm4d4m12f"   
 }
+
 2. 포인트 조회 API   
     - 아래의 API로 Path Pamrameter를 통해 해당 userId의 점수를 조회할 수 있습니다.
 <img width="627" alt="스크린샷 2021-09-19 오후 7 19 21" src="https://user-images.githubusercontent.com/85449777/133925845-29f3c4e3-7d10-4fa3-ae7b-e2291ac16c4e.png">
