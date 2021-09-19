@@ -41,11 +41,11 @@ create table user
 );
 
 alter table review
-    add constraint FKg0a43205m2mbhfhnn9i5atdps
+    add constraint review_place_fk
         foreign key (place_id)
             references place (id);
 
 alter table review
-    add constraint FK5bhefci502sd63299f0mw09t7
+    add constraint review_user_fk
         foreign key (user_id)
             references user (id);

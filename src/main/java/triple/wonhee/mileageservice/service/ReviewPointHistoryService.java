@@ -39,6 +39,7 @@ public class ReviewPointHistoryService {
         );
 
         if (action == ActionType.ADD) { //리뷰 작성
+
             List<Review> findReviewList = reviewRepository.findAllByPlaceId(placeId);
             //Review가 DB에 이미 저장되었다는 가정하에 해당 장소에 대한 findReviewList.size()가 1인 경우를 첫 리뷰로 판단
             boolean isFirstReview = findReviewList.size() == 1;
@@ -47,6 +48,7 @@ public class ReviewPointHistoryService {
             return saveReviewPointHistory(eventRequestDto, isFirstReview, reviewPoint, reviewPoint);
 
         } else if (action == ActionType.MOD) { //리뷰 수정
+
             //ReviewPointHistory 목록에서 Id를 역순으로 가져옴으로써 reviewId에 대한 가장 최근 이력 조회
             List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
                 .findAllByReviewIdOrderByIdDesc(reviewId);
@@ -60,6 +62,7 @@ public class ReviewPointHistoryService {
             return saveReviewPointHistory(eventRequestDto, isFirstReview, changedPoint, newReviewPoint);
 
         } else if (action == ActionType.DELETE) { // 리뷰 삭제
+
             //ReviewPointHistory 목록에서 Id를 역순으로 가져옴으로써 reviewId에 대한 가장 최근 이력 조회
             List<ReviewPointHistory> findReviewPointHistories = reviewPointRepository
                 .findAllByReviewIdOrderByIdDesc(reviewId);
