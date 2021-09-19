@@ -114,6 +114,7 @@ class ReviewPointHistoryServiceTest {
             Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(0);
             Assertions.assertThat(user.getUserPoint()).isEqualTo(0);
         }
+
     }
 
     @Nested
@@ -291,6 +292,49 @@ class ReviewPointHistoryServiceTest {
             Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(1);
             Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(3);
             Assertions.assertThat(user.getUserPoint()).isEqualTo(3);
+        }
+    }
+
+    @Nested
+    @DisplayName("ActionType이 DELETE인 경우")
+    class saveReviewPointDelete {
+
+        @Test
+        @DisplayName("삭제 event 발생시 점수 초기화 여부")
+        public void deleteReviewPoint() {
+            //given
+            List<String> attachedPhotoIds = new ArrayList<>();
+
+            User user = User.builder().userId("userId").build();
+
+            List<ReviewPointHistory> reviewPointHistoryList = new ArrayList<>();
+            ReviewPointHistory reviewPointHistory1 = ReviewPointHistory.builder()
+                .action(ActionType.ADD)
+                .reviewPoint(3)
+                .build();
+            reviewPointHistoryList.add(reviewPointHistory1);
+
+            EventRequestDto eventRequestDto = EventRequestDto.builder()
+                .action(ActionType.DELETE)
+                .placeId("placeId1")
+                .userId("userId1")
+                .attachedPhotoIds(attachedPhotoIds)
+                .content("review1")
+                .build();
+
+            given(userRepository.findByUserId("userId1")).willReturn(
+                java.util.Optional.ofNullable(user));
+
+            given(reviewPointRepository.findAllByReviewIdOrderByIdDesc(any()))
+                .willReturn(reviewPointHistoryList);
+
+            //when
+            ReviewPointHistory reviewPointHistory = reviewPointHistoryService
+                .saveReviewPointHistory(eventRequestDto);
+
+            //then
+            Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(-3);
+            Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(0);
         }
     }
 }
