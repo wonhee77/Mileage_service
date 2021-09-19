@@ -8,8 +8,6 @@ import triple.wonhee.mileageservice.domain.ReviewPointHistory;
 @Repository
 public interface ReviewPointRepository extends JpaRepository<ReviewPointHistory, Long> {
 
-    List<ReviewPointHistory> findAllByPlaceIdAndIsFirstReviewOrderByIdDesc(String placeId, boolean firstReview);
-
     List<ReviewPointHistory> findAllByReviewIdOrderByIdDesc(String reviewId);
 
 }
