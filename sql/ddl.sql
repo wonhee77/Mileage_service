@@ -14,17 +14,14 @@ create table place
 
 create table review
 (
-    review_id       varchar(45),
-    review_content  varchar(255),
-    user_id         varchar(45),
-    place_id        varchar(45),
-    is_first_review boolean,
-    primary key (review_id),
-    constraint review_ibfk_1
-        foreign key (user_id) references user (user_id),
-    constraint review_ibfk_2
-        foreign key (place_id) references place (place_id)
+    review_id      char(36) not null,
+    review_content varchar(255) charset utf8,
+    place_place_id char(36),
+    user_user_id   char(36) not null,
+    primary key (review_id)
 );
+create
+    index i_review on review (place_place_id);
 
 create table review_point_history
 (
