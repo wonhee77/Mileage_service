@@ -1,20 +1,20 @@
 create table place
 (
-    place_id   char(36) not null,
+    id         char(36) not null,
     place_name varchar(45) charset utf8,
-    primary key (place_id)
+    primary key (id)
 );
 
 create table review
 (
-    review_id      char(36) not null,
+    id             char(36) not null,
     review_content varchar(255) charset utf8,
-    place_place_id char(36),
-    user_user_id   char(36) not null,
-    primary key (review_id)
+    place_id       char(36) not null,
+    user_id        char(36) not null,
+    primary key (id)
 );
 create
-    index i_review on review (place_place_id);
+    index i_review on review (place_id);
 
 create table review_point_history
 (
@@ -35,17 +35,17 @@ create
 
 create table user
 (
-    user_id    char(36) not null,
+    id         char(36) not null,
     user_point integer  not null,
-    primary key (user_id)
+    primary key (id)
 );
 
 alter table review
     add constraint FKg0a43205m2mbhfhnn9i5atdps
-        foreign key (place_place_id)
-            references place (place_id);
+        foreign key (place_id)
+            references place (id);
 
 alter table review
     add constraint FK5bhefci502sd63299f0mw09t7
-        foreign key (user_user_id)
-            references user (user_id);
+        foreign key (user_id)
+            references user (id);
