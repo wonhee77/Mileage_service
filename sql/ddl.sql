@@ -1,14 +1,7 @@
-create table user
-(
-    user_id    varchar(255),
-    user_point int,
-    primary key (user_id)
-);
-
 create table place
 (
-    place_id   varchar(45),
-    place_name varchar(45),
+    place_id   char(36) not null,
+    place_name varchar(45) charset utf8,
     primary key (place_id)
 );
 
@@ -25,16 +18,34 @@ create
 
 create table review_point_history
 (
-    review_id          varchar(45),
-    action             enum('ADD','MOD','DELETE'),
-    reviewId           varchar(45),
-    attachedPhotoCount int,
-    userId             varchar(45),
-    placeId            varchar(45),
-    reviewContent      varchar(255),
-    isFirstReview      tinyint,
-    point              int,
-    primary key (review_id)
+    id                   bigint      not null auto_increment,
+    action               varchar(45) not null,
+    attached_photo_count integer     not null,
+    changed_point        integer     not null,
+    is_first_review      tinyint     not null,
+    place_id             char(36)    not null,
+    review_content       varchar(255) charset utf8,
+    review_id            char(36)    not null,
+    review_point         integer     not null,
+    user_id              char(36)    not null,
+    primary key (id)
+);
+create
+    index i_review_point_history on review_point_history (review_id);
+
+create table user
+(
+    user_id    char(36) not null,
+    user_point integer  not null,
+    primary key (user_id)
 );
 
+alter table review
+    add constraint FKg0a43205m2mbhfhnn9i5atdps
+        foreign key (place_place_id)
+            references place (place_id);
 
+alter table review
+    add constraint FK5bhefci502sd63299f0mw09t7
+        foreign key (user_user_id)
+            references user (user_id);
