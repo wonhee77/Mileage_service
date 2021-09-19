@@ -1,5 +1,6 @@
 package triple.wonhee.mileageservice.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import lombok.AccessLevel;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Place {
 
-    @Id
+    @Id @Column(name = "id")
     String placeId;
 
     String placeName;

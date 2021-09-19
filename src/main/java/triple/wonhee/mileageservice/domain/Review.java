@@ -1,5 +1,6 @@
 package triple.wonhee.mileageservice.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Table(indexes = @Index(name = "i_review", columnList = "place_place_id"))
 public class Review {
 
-    @Id
+    @Id @Column(name = "id")
     String reviewId;
 
     String reviewContent;
