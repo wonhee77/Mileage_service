@@ -1,3 +1,10 @@
+create table user
+(
+    id         char(36) not null,
+    user_point integer  not null,
+    primary key (id)
+);
+
 create table place
 (
     id         char(36) not null,
@@ -32,13 +39,6 @@ create table review_point_history
 );
 create
     index i_review_point_history on review_point_history (review_id);
-
-create table user
-(
-    id         char(36) not null,
-    user_point integer  not null,
-    primary key (id)
-);
 
 alter table review
     add constraint review_place_fk

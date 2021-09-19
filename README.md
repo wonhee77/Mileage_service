@@ -2,6 +2,7 @@
 리뷰 작성이 이뤄질때마다 발생하는 리뷰 작성 이벤트를 통하여 포인트를 적립하는 REST API Server입니다.  
 포인트 적립과 조회 2개의 API를 구현하였습니다.
 
+
 ### 사용 기술 및 환경
 - Java 8, Spring Boot, Spring Data JPA, Gradle, Lombok
 - Test: Junit5, Mockito

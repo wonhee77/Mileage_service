@@ -16,6 +16,7 @@ import triple.wonhee.mileageservice.dto.EventRequestDto;
 import triple.wonhee.mileageservice.repository.ReviewPointRepository;
 import triple.wonhee.mileageservice.repository.ReviewRepository;
 import triple.wonhee.mileageservice.repository.UserRepository;
+import triple.wonhee.mileageservice.util.exception.JpaNullPointException;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ public class ReviewPointHistoryService {
         String reviewId = eventRequestDto.getReviewId();
 
         User findUser = userRepository.findByUserId(userId).orElseThrow(
-            () -> new NullPointerException("해당 id의 유저가 없습니다.")
+            () -> new JpaNullPointException("해당 id의 유저가 없습니다.")
         );
 
         if (action == ActionType.ADD) { //리뷰 작성
