@@ -3,6 +3,7 @@ package triple.wonhee.mileageservice.domain;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +21,7 @@ public class User {
         userPoint += point;
     }
 
+    @Builder
     public User(String userId, int userPoint) {
         this.userId = userId;
         this.userPoint = userPoint;
