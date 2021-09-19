@@ -1,28 +1,27 @@
 package triple.wonhee.mileageservice.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-//@Table(indexes = @Index(name = "i_place", columnList = "place"))
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = @Index(name = "i_review", columnList = "place_id"))
 public class Review {
 
-    @Id
+    @Id @Column(name = "id")
     String reviewId;
 
     String reviewContent;
-
-    boolean isFirstReview;
 
     @ManyToOne(fetch = FetchType.LAZY)
     User user;
@@ -31,9 +30,9 @@ public class Review {
     Place place;
 
     @Builder
-    public Review(String reviewContent, boolean isFirstReview, User user, Place place) {
+    public Review(String reviewId, String reviewContent, User user, Place place) {
+        this.reviewId = reviewId;
         this.reviewContent = reviewContent;
-        this.isFirstReview = isFirstReview;
         this.user = user;
         this.place = place;
     }
