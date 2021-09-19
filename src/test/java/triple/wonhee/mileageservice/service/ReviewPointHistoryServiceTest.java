@@ -115,4 +115,182 @@ class ReviewPointHistoryServiceTest {
             Assertions.assertThat(user.getUserPoint()).isEqualTo(0);
         }
     }
+
+    @Nested
+    @DisplayName("ActionType이 MOD인 경우")
+    class saveReviewPointMod {
+
+        @Test
+        @DisplayName("점수 변경 여부(content 글자수  7 -> 0)")
+        public void minusContentReviewPoint() {
+            //given
+            User user = User.builder().userId("userId").userPoint(3).build();
+
+            List<String> attachedPhotoIds = new ArrayList<>();
+            attachedPhotoIds.add("photo1");
+            attachedPhotoIds.add("photo2");
+
+            List<ReviewPointHistory> reviewPointHistoryList = new ArrayList<>();
+            ReviewPointHistory reviewPointHistory1 = ReviewPointHistory.builder()
+                .action(ActionType.ADD)
+                .content("review1")
+                .isFirstReview(true)
+                .reviewPoint(3)
+                .build();
+            reviewPointHistoryList.add(reviewPointHistory1);
+
+            EventRequestDto eventRequestDto = EventRequestDto.builder()
+                .action(ActionType.MOD)
+                .placeId("placeId1")
+                .userId("userId1")
+                .attachedPhotoIds(attachedPhotoIds)
+                .content("")
+                .build();
+
+            given(userRepository.findByUserId("userId1")).willReturn(
+                java.util.Optional.ofNullable(user));
+
+            given(reviewPointRepository.findAllByReviewIdOrderByIdDesc(any()))
+                .willReturn(reviewPointHistoryList);
+
+            //when
+            ReviewPointHistory reviewPointHistory = reviewPointHistoryService
+                .saveReviewPointHistory(eventRequestDto);
+
+            //then
+            Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(-1);
+            Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(2);
+            Assertions.assertThat(user.getUserPoint()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("점수 변경 여부(content 글자수  0 -> 7)")
+        public void plusContentReviewPoint() {
+            //given
+            User user = User.builder().userId("userId").userPoint(2).build();
+
+            List<String> attachedPhotoIds = new ArrayList<>();
+            attachedPhotoIds.add("photo1");
+            attachedPhotoIds.add("photo2");
+
+            List<ReviewPointHistory> reviewPointHistoryList = new ArrayList<>();
+            ReviewPointHistory reviewPointHistory1 = ReviewPointHistory.builder()
+                .action(ActionType.ADD)
+                .content("")
+                .isFirstReview(true)
+                .reviewPoint(2)
+                .build();
+            reviewPointHistoryList.add(reviewPointHistory1);
+
+            EventRequestDto eventRequestDto = EventRequestDto.builder()
+                .action(ActionType.MOD)
+                .placeId("placeId1")
+                .userId("userId1")
+                .attachedPhotoIds(attachedPhotoIds)
+                .content("review1")
+                .build();
+
+            given(userRepository.findByUserId("userId1")).willReturn(
+                java.util.Optional.ofNullable(user));
+
+            given(reviewPointRepository.findAllByReviewIdOrderByIdDesc(any()))
+                .willReturn(reviewPointHistoryList);
+
+            //when
+            ReviewPointHistory reviewPointHistory = reviewPointHistoryService
+                .saveReviewPointHistory(eventRequestDto);
+
+            //then
+            Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(1);
+            Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(3);
+            Assertions.assertThat(user.getUserPoint()).isEqualTo(3);
+        }
+
+        @Test
+        @DisplayName("점수 변경 여부(attachedPhoto 개수  3 -> 0)")
+        public void minusPhotoReviewPoint() {
+            //given
+            User user = User.builder().userId("userId").userPoint(3).build();
+
+            List<String> attachedPhotoIds = new ArrayList<>();
+
+            List<ReviewPointHistory> reviewPointHistoryList = new ArrayList<>();
+            ReviewPointHistory reviewPointHistory1 = ReviewPointHistory.builder()
+                .action(ActionType.ADD)
+                .content("review1")
+                .attachedPhotoCount(2)
+                .isFirstReview(true)
+                .reviewPoint(3)
+                .build();
+            reviewPointHistoryList.add(reviewPointHistory1);
+
+            EventRequestDto eventRequestDto = EventRequestDto.builder()
+                .action(ActionType.MOD)
+                .placeId("placeId1")
+                .userId("userId1")
+                .attachedPhotoIds(attachedPhotoIds)
+                .content("review1")
+                .build();
+
+            given(userRepository.findByUserId("userId1")).willReturn(
+                java.util.Optional.ofNullable(user));
+
+            given(reviewPointRepository.findAllByReviewIdOrderByIdDesc(any()))
+                .willReturn(reviewPointHistoryList);
+
+            //when
+            ReviewPointHistory reviewPointHistory = reviewPointHistoryService
+                .saveReviewPointHistory(eventRequestDto);
+
+            //then
+            Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(-1);
+            Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(2);
+            Assertions.assertThat(user.getUserPoint()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("점수 변경 여부(attachedPhoto 개수  0 -> 3)")
+        public void plusPhotoReviewPoint() {
+            //given
+            User user = User.builder().userId("userId").userPoint(2).build();
+
+            List<String> attachedPhotoIds = new ArrayList<>();
+            attachedPhotoIds.add("photo1");
+            attachedPhotoIds.add("photo2");
+            attachedPhotoIds.add("photo3");
+
+            List<ReviewPointHistory> reviewPointHistoryList = new ArrayList<>();
+            ReviewPointHistory reviewPointHistory1 = ReviewPointHistory.builder()
+                .action(ActionType.ADD)
+                .content("review1")
+                .attachedPhotoCount(0)
+                .isFirstReview(true)
+                .reviewPoint(2)
+                .build();
+            reviewPointHistoryList.add(reviewPointHistory1);
+
+            EventRequestDto eventRequestDto = EventRequestDto.builder()
+                .action(ActionType.MOD)
+                .placeId("placeId1")
+                .userId("userId1")
+                .attachedPhotoIds(attachedPhotoIds)
+                .content("review1")
+                .build();
+
+            given(userRepository.findByUserId("userId1")).willReturn(
+                java.util.Optional.ofNullable(user));
+
+            given(reviewPointRepository.findAllByReviewIdOrderByIdDesc(any()))
+                .willReturn(reviewPointHistoryList);
+
+            //when
+            ReviewPointHistory reviewPointHistory = reviewPointHistoryService
+                .saveReviewPointHistory(eventRequestDto);
+
+            //then
+            Assertions.assertThat(reviewPointHistory.getChangedPoint()).isEqualTo(1);
+            Assertions.assertThat(reviewPointHistory.getReviewPoint()).isEqualTo(3);
+            Assertions.assertThat(user.getUserPoint()).isEqualTo(3);
+        }
+    }
 }
